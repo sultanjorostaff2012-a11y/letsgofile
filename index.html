@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Let'sGoFile</title>
+    <!-- Иконка сайта (Favicon) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><text x='50' y='70' font-size='60' font-family='Times New Roman' font-weight='bold' fill='white' text-anchor='middle'>F</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,9 +14,7 @@
         <div class="header-content">
             <div>
                 <h1>Let'sGoFile</h1>
-                <p>Передача файлов по всему миру!
-                    Версия 1.0.1 Release
-                </p>
+                <p>Передача файлов по всему миру</p>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тёмная тема</button>
         </div>
@@ -25,6 +25,7 @@
         <a onclick="showTab('inbox')">Входящие <span id="inboxBadge" style="background:#e74c3c; color:white; border-radius:50%; padding:2px 6px; font-size:12px; display:none;">0</span></a>
         <a onclick="showTab('mydisk')">Мой диск</a>
         <a onclick="showTab('sent')">История</a>
+        <a onclick="showTab('updates')">Обновления</a> <!-- НОВАЯ ВКЛАДКА -->
         <a onclick="showTab('account')">Аккаунт</a>
     </nav>
 
@@ -62,7 +63,6 @@
 
                     <input type="text" id="messageInput" placeholder="Написать сообщение (по желанию)...">
                     
-                    <!-- ПРЕДУПРЕЖДЕНИЕ О ЛИМИТЕ -->
                     <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 14px;">
                         ⚠️ Максимальный размер файла: 50 МБ (ограничение сервера)
                     </div>
@@ -81,7 +81,6 @@
                 <p>У вас пока нет входящих файлов.</p>
             </div>
         </div>
-
         <!-- ВКЛАДКА 3: МОЙ ДИСК -->
         <div id="tab-mydisk" class="tab-content">
             <h2>Мой диск (Файлы для себя)</h2>
@@ -100,7 +99,126 @@
             </ul>
         </div>
 
-        <!-- ВКЛАДКА 5: АККАУНТ -->
+        <!-- ВКЛАДКА 5: ОБНОВЛЕНИЯ -->
+        <div id="tab-updates" class="tab-content">
+            <h2>История обновлений</h2>
+            
+            <div class="update-card">
+                <div class="update-version">Версия 1.0.2 <span class="update-date">(Сегодня)</span></div>
+                <ul class="update-list">
+                    <li>Добавлена вкладка с историей обновлений.</li>
+                    <li>Улучшен дизайн кнопок и полей ввода.</li>
+                    <li>Добавлена проверка размера файла (до 50 МБ).</li>
+                </ul>
+            </div>
+
+            <div class="update-card">
+                <div class="update-version">Версия 1.0.1 <span class="update-date">(Ранее)</span></div>
+                <ul class="update-list">
+                    <li>Добавлены статусы пользователей (Онлайн, Занят, Не беспокоить).</li>
+                    <li>Теперь можно смотреть профили других пользователей.</li>
+                    <li>Добавлена возможность менять аватарку.</li>
+                </ul>
+            </div>
+
+            <div class="update-card">
+                <div class="update-version">Версия 1.0.0 <span class="update-date">(Запуск)</span></div>
+                <ul class="update-list">
+                    <li>Официальный запуск Let'sGoFile!</li>
+                    <li>Регистрация и вход через Supabase.</li>
+                    <li>Отправка и скачивание файлов.</li>
+                    <li>Вкладки «Входящие», «Мой диск» и «История».</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 6: АККАУНТ -->
+        <div id="tab-account" class="tab-content">
+            <h2>Мой аккаунт</h2>
+            
+            <div id="authForms">
+                <div class="auth-box">
+                    <h3>Регистрация</h3>
+                    <input type="text" id="regName" placeholder="Имя">
+                    <input type="text" id="regSurname" placeholder="Фамилия">
+                    <input type="text" id="regPatronymic" placeholder="Отчество (по желанию)">
+                    <input type="text" id="regNickname" placeholder="Уникальный никнейм (на англ.)">
+                    <input type="password" id="regPassword" placeholder="Пароль">
+                    <input type="number" id="regAge" placeholder="Возраст">
+                    <input type="email" id="regEmail" placeholder="Почта (обязательно)">
+                    <button onclick="registerUser()">Зарегистрироваться</button>
+                </div>
+                <div class="auth-box">
+                    <h3>Вход</h3>
+                    <input type="email" id="loginEmail" placeholder="Ваша почта">
+                    <input type="password" id="loginPassword" placeholder="Пароль">
+                    <button onclick="loginUser()">Войти</button>
+                </div>
+            </div>
+
+            <div id="profileBox" style="display: none;">
+                <div class="profile-header">
+                    <div class="avatar" id="profileAvatar"></div>
+                    <div class="profile-info">
+                        <h3 id="profileName">Имя</h3>
+                        <p id="profileNickname">@никнейм</p>
+                        <p id="profileAge">Возраст: 0</p>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <!-- ВКЛАДКА 3: МОЙ ДИСК -->
+        <div id="tab-mydisk" class="tab-content">
+            <h2>Мой диск (Файлы для себя)</h2>
+            <div id="myDiskList">
+                <p>На вашем диске пока нет файлов.</p>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 4: ИСТОРИЯ -->
+        <div id="tab-sent" class="tab-content">
+            <div class="tab-header">
+                <h2>История отправок</h2>
+            </div>
+            <ul id="historyList" class="file-list">
+                <li>Пока нет отправленных файлов.</li>
+            </ul>
+        </div>
+
+        <!-- ВКЛАДКА 5: ОБНОВЛЕНИЯ -->
+        <div id="tab-updates" class="tab-content">
+            <h2>История обновлений</h2>
+            
+            <div class="update-card">
+                <div class="update-version">Версия 1.0.2 <span class="update-date">(Сегодня)</span></div>
+                <ul class="update-list">
+                    <li>Добавлена вкладка с историей обновлений.</li>
+                    <li>Улучшен дизайн кнопок и полей ввода.</li>
+                    <li>Добавлена проверка размера файла (до 50 МБ).</li>
+                </ul>
+            </div>
+
+            <div class="update-card">
+                <div class="update-version">Версия 1.0.1 <span class="update-date">(Ранее)</span></div>
+                <ul class="update-list">
+                    <li>Добавлены статусы пользователей (Онлайн, Занят, Не беспокоить).</li>
+                    <li>Теперь можно смотреть профили других пользователей.</li>
+                    <li>Добавлена возможность менять аватарку.</li>
+                </ul>
+            </div>
+
+            <div class="update-card">
+                <div class="update-version">Версия 1.0.0 <span class="update-date">(Запуск)</span></div>
+                <ul class="update-list">
+                    <li>Официальный запуск Let'sGoFile!</li>
+                    <li>Регистрация и вход через Supabase.</li>
+                    <li>Отправка и скачивание файлов.</li>
+                    <li>Вкладки «Входящие», «Мой диск» и «История».</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 6: АККАУНТ -->
         <div id="tab-account" class="tab-content">
             <h2>Мой аккаунт</h2>
             
@@ -151,15 +269,14 @@
                         <input type="number" id="editAge" placeholder="Новый возраст">
                         <input type="text" id="editBio" placeholder="Немного о себе (описание)">
                         
-                        <!-- ВЫБОР СТАТУСА -->
-                        <select id="editStatus" style="width: 100%; padding: 10px; margin-bottom: 10px; font-family: 'Times New Roman', Times, serif; font-size: 16px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color);">
+                        <select id="editStatus" style="width: 100%; padding: 10px; margin-bottom: 10px; font-family: 'Times New Roman', Times, serif; font-size: 16px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); border-radius: 8px;">
                             <option value="online">🟢 Онлайн</option>
                             <option value="busy">🔴 Занят</option>
                             <option value="dnd">🟡 Не беспокоить</option>
                             <option value="invisible">⚫ Невидимка</option>
                         </select>
 
-                        <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px dashed #ccc;">
+                        <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px dashed #ccc; border-radius: 8px;">
                             <p style="margin: 0; font-size: 14px;">Смена никнейма (осталось попыток: <strong id="nickChangeLeft">2</strong>):</p>
                             <input type="text" id="editNickname" placeholder="Новый никнейм (на англ.)" style="margin-top: 5px;">
                         </div>
@@ -178,10 +295,7 @@
             <div class="avatar" id="modalAvatar" style="margin: 0 auto 15px auto;"></div>
             <h2 id="modalName" style="margin: 0 0 5px 0; border: none;">Имя</h2>
             <p id="modalNickname" style="margin: 0; color: #7f8c8d; font-size: 18px;">@ник</p>
-            
-            <!-- СТАТУС В ПРОФИЛЕ -->
             <p id="modalStatus" style="margin: 5px 0; font-weight: bold; font-size: 14px;"></p>
-
             <p id="modalAge" style="margin: 5px 0;">Возраст: 0</p>
             <p id="modalDate" style="margin: 5px 0; font-size: 14px; color: #95a5a6;">Дата регистрации: ...</p>
             <p id="modalBio" style="margin-top: 15px; font-style: italic;">Описание профиля</p>
