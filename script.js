@@ -1,12 +1,9 @@
-// --- ПОДКЛЮЧЕНИЕ SUPABASE ---
 const SUPABASE_URL = 'https://llqlrjfqlzorfyecrtay.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_yqhRKQRL_nk41fCRrFpFhA_jQIEthvh'; // Вставь сюда полный ключ, если он обрезан
+const SUPABASE_KEY = 'sb_publishable_yqhRKQRL_nk41fCRrFpFhA_jQIEthvh'; // Вставь свой полный ключ
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- ПЕРЕМЕННЫЕ ---
 let selectedFile = null;
 
-// --- ТЕМНАЯ ТЕМА ---
 function toggleTheme() {
     document.body.classList.toggle('dark-theme');
     const isDark = document.body.classList.contains('dark-theme');
@@ -18,21 +15,17 @@ if (localStorage.getItem('lgs_theme') === 'dark') {
     document.getElementById('themeBtn').innerText = 'Светлая тема';
 }
 
-// --- ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ---
 function showTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.getElementById('tab-' + tabName).classList.add('active');
-    
     if (tabName === 'sent') renderHistory();
     if (tabName === 'inbox') renderInbox();
     if (tabName === 'mydisk') renderMyDisk();
     if (tabName === 'account') checkUser();
 }
 
-// --- РАБОТА С ФАЙЛОМ ---
 const fileInput = document.getElementById('fileInput');
 const fileDetails = document.getElementById('fileDetails');
-
 fileInput.addEventListener('change', function(e) {
     selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -42,19 +35,16 @@ fileInput.addEventListener('change', function(e) {
     }
 });
 
-// --- РЕГИСТРАЦИЯ ---
 async function registerUser() {
     const name = document.getElementById('regName').value.trim();
     const surname = document.getElementById('regSurname').value.trim();
+    const patronymic = document.getElementById('regPatronymic').value.trim();
     const nickname = document.getElementById('regNickname').value.trim().toLowerCase();
     const password = document.getElementById('regPassword').value;
     const age = document.getElementById('regAge').value;
     const email = document.getElementById('regEmail').value.trim();
 
-    if (!name || !surname || !nickname || !age || !password || !email) { 
-        alert("Заполните ВСЕ поля! Почта обязательна."); return; 
-    }
-
+    if (!name || !surname || !nickname || !age || !password || !email) { alert("Заполните ВСЕ поля!"); return; }
     const engRegex = /^[a-zA-Z0-9_]+$/;
     if (!engRegex.test(nickname)) { alert("Никнейм только на английском!"); return; }
 
@@ -62,18 +52,16 @@ async function registerUser() {
     if (authError) { alert("Ошибка регистрации: " + authError.message); return; }
 
     const { error: profileError } = await supabaseClient.from('profiles').insert([{ 
-        id: authData.user.id, name, surname, nickname, age, email, avatar: null 
+        id: authData.user.id, name, surname, patronymic, nickname, age, email, avatar: null, nick_changes: 0 
     }]);
 
     if (profileError) { alert("Ошибка профиля: " + profileError.message); return; }
     alert("Регистрация успешна! Теперь войдите.");
 }
 
-// --- ВХОД ---
 async function loginUser() {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-
     const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     if (error) { alert("Ошибка входа: " + error.message); return; }
     await loadProfile(data.user.id);
@@ -92,10 +80,11 @@ async function checkUser() {
     
     const authForms = document.getElementById('authForms');
     const profileBox = document.getElementById('profileBox');
+
     if (session && profile) {
         authForms.style.display = 'none';
         profileBox.style.display = 'block';
-        document.getElementById('profileName').innerText = `${profile.surname} ${profile.name}`;
+        document.getElementById('profileName').innerText = `${profile.surname} ${profile.name} ${profile.patronymic || ''}`;
         document.getElementById('profileNickname').innerText = `@${profile.nickname}`;
         document.getElementById('profileAge').innerText = `Возраст: ${profile.age}`;
         
@@ -107,6 +96,7 @@ async function checkUser() {
             avatarDiv.style.backgroundImage = 'none';
             avatarDiv.innerText = profile.name.charAt(0).toUpperCase(); 
         }
+        document.getElementById('nickChangeLeft').innerText = 2 - (profile.nick_changes || 0);
         checkInbox();
     } else {
         authForms.style.display = 'flex';
@@ -114,28 +104,91 @@ async function checkUser() {
     }
 }
 
-// --- ОТПРАВКА ФАЙЛА ---
+function toggleSettings() {
+    const box = document.getElementById('settingsBox');
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+async function uploadAvatar(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        
+        const { error } = await supabaseClient.from('profiles').update({ avatar: base64Image }).eq('id', user.id);
+        if (error) { alert("Ошибка: " + error.message); return; }
+        
+        let profile = JSON.parse(localStorage.getItem('lgs_profile'));
+        profile.avatar = base64Image;
+        localStorage.setItem('lgs_profile', JSON.stringify(profile));
+        
+        checkUser();
+        alert("Аватарка обновлена!");
+    };
+    reader.readAsDataURL(file);
+}
+
+async function saveSettings() {
+    let profile = JSON.parse(localStorage.getItem('lgs_profile'));
+    if (!profile) return;
+
+    const newName = document.getElementById('editName').value.trim();
+    const newSurname = document.getElementById('editSurname').value.trim();
+    const newAge = document.getElementById('editAge').value;
+    const newNickname = document.getElementById('editNickname').value.trim().toLowerCase();
+
+    let updateData = {};
+    if (newName) updateData.name = newName;
+    if (newSurname) updateData.surname = newSurname;
+    if (newAge) updateData.age = newAge;
+
+    if (newNickname && newNickname !== profile.nickname) {
+        const engRegex = /^[a-zA-Z0-9_]+$/;
+        if (!engRegex.test(newNickname)) { alert("Никнейм только на английском!"); return; }
+        if (profile.nick_changes >= 2) { alert("Вы использовали все 2 попытки!"); return; }
+        
+        const { data: existing } = await supabaseClient.from('profiles').select('id').eq('nickname', newNickname);
+        if (existing && existing.length > 0) { alert("Никнейм занят!"); return; }
+
+        updateData.nickname = newNickname;
+        updateData.nick_changes = (profile.nick_changes || 0) + 1;
+    }
+
+    if (Object.keys(updateData).length === 0) { alert("Вы ничего не изменили."); return; }
+
+    const { error } = await supabaseClient.from('profiles').update(updateData).eq('id', profile.id);
+    if (error) { alert("Ошибка сохранения: " + error.message); return; }
+
+    profile = { ...profile, ...updateData };
+    localStorage.setItem('lgs_profile', JSON.stringify(profile));
+    
+    alert("Настройки сохранены!");
+    document.getElementById('editName').value = '';
+    document.getElementById('editSurname').value = '';
+    document.getElementById('editAge').value = '';
+    document.getElementById('editNickname').value = '';
+    checkUser();
+}
+
 async function sendFile() {
     if (!selectedFile) { alert("Выберите файл!"); return; }
     const recipientNick = document.getElementById('recipientInput').value.trim().toLowerCase();
     if (!recipientNick) { alert("Введите никнейм!"); return; }
-
     const { data: recData, error: recError } = await supabaseClient.from('profiles').select('id').eq('nickname', recipientNick).single();
     if (recError || !recData) { alert("Пользователь не найден!"); return; }
 
-    // Загружаем файл
     const fileExt = selectedFile.name.split('.').pop();
     const fileName = `${Date.now()}_${recipientNick}.${fileExt}`;
     const { error: uploadError } = await supabaseClient.storage.from('files').upload(fileName, selectedFile);
     if (uploadError) { alert("Ошибка загрузки: " + uploadError.message); return; }
 
-    // Получаем ссылку
     const { data: urlData } = supabaseClient.storage.from('files').getPublicUrl(fileName);
-    
     const { data: { user } } = await supabaseClient.auth.getUser();
     const topic = document.getElementById('customTopicInput').value || document.querySelector('input[name="topic"]:checked')?.value || "Без темы";
     
-    // Сохраняем в БД
     const { error: msgError } = await supabaseClient.from('messages').insert([{
         sender_id: user.id, recipient_id: recData.id, file_name: selectedFile.name,
         file_url: urlData.publicUrl, file_size: (selectedFile.size / (1024 * 1024)).toFixed(2),
@@ -150,7 +203,6 @@ async function sendFile() {
     document.querySelectorAll('input[name="topic"]').forEach(r => r.checked = false);
 }
 
-// --- ВХОДЯЩИЕ ---
 async function renderInbox() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) return;
@@ -173,23 +225,32 @@ async function renderInbox() {
                 </div>
             </div>
             <div class="inbox-body">
-            <p><span style="background:#e67e22; color:white; padding: 2px 8px; border-radius: 10px; font-size:12px;">${m.topic}</span></p>
+                <p><span style="background:#e67e22; color:white; padding: 2px 8px; border-radius: 10px; font-size:12px;">${m.topic}</span></p>
                 <p><strong>Файл:</strong> ${m.file_name} (${m.file_size} МБ)</p>
                 <p><strong>Сообщение:</strong> ${m.message || 'Нет'}</p>
             </div>
             <div class="inbox-actions">
                 <a href="${m.file_url}" target="_blank" class="btn-download">Скачать</a>
+                <button class="btn-delete" onclick="deleteMessage(${m.id})">Удалить</button>
             </div>
         </div>
     `).join('');
 }
 
-// --- ИСТОРИЯ ---
+async function deleteMessage(messageId) {
+    if (!confirm("Вы уверены, что хотите удалить этот файл?")) return;
+
+    const { error } = await supabaseClient.from('messages').delete().eq('id', messageId);
+    if (error) { alert("Ошибка удаления: " + error.message); return; }
+    
+    renderInbox();
+    alert("Файл удален!");
+}
+
 async function renderHistory() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const list = document.getElementById('historyList');
     if (!user) { list.innerHTML = '<li>Войдите!</li>'; return; }
-
     const { data, error } = await supabaseClient.from('messages').select(`*, recipient:recipient_id (nickname)`).eq('sender_id', user.id).order('created_at', { ascending: false });
     if (error) { list.innerHTML = '<li>Ошибка.</li>'; return; }
     if (data.length === 0) { list.innerHTML = '<li>Пусто.</li>'; return; }
@@ -197,7 +258,6 @@ async function renderHistory() {
     list.innerHTML = data.map(m => `<li><strong>${m.file_name}</strong> -> @${m.recipient.nickname}<br><small>${new Date(m.created_at).toLocaleString()}</small></li>`).join('');
 }
 
-// --- МОЙ ДИСК ---
 async function renderMyDisk() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const list = document.getElementById('myDiskList');
@@ -216,5 +276,4 @@ async function logoutConfirm() {
     }
 }
 
-// Инициализация
 checkUser();
