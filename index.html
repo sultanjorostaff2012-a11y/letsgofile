@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Let'sGoFile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <div>
+                <h1>Let'sGoFile</h1>
+                <p>Передача файлов по всему миру</p>
+            </div>
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тёмная тема</button>
+        </div>
+    </header>
+
+    <nav>
+        <a onclick="showTab('send')">Отправить</a>
+        <a onclick="showTab('inbox')">Входящие <span id="inboxBadge" style="background:#e74c3c; color:white; border-radius:50%; padding:2px 6px; font-size:12px; display:none;">0</span></a>
+        <a onclick="showTab('mydisk')">Мой диск</a>
+        <a onclick="showTab('sent')">История</a>
+        <a onclick="showTab('account')">Аккаунт</a>
+    </nav>
+
+    <div class="container">
+        
+        <!-- ВКЛАДКА 1: ОТПРАВКА -->
+        <div id="tab-send" class="tab-content active">
+            <h2>Отправить файл</h2>
+            <div class="send-layout">
+                <div class="file-section">
+                    <input type="file" id="fileInput" style="display: none;">
+                    <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                        <h3>Выбрать файл</h3>
+                    </div>
+                    <div id="fileDetails" class="file-details"></div>
+                </div>
+                <div class="recipient-section">
+                    <h3>Кому отправить?</h3>
+                    <input type="text" id="recipientInput" placeholder="Введите никнейм (или свой ник для сохранения на диск)">
+                    <div id="recipientStatus" class="recipient-status"></div>
+                    
+                    <div class="topic-section">
+                        <h4>Тема файла:</h4>
+                        <div class="topics-list">
+                            <label><input type="radio" name="topic" value="Презентация"> Презентация</label>
+                            <label><input type="radio" name="topic" value="Фото"> Фото</label>
+                            <label><input type="radio" name="topic" value="Документы"> Документы</label>
+                            <label><input type="radio" name="topic" value="Видео"> Видео</label>
+                            <label><input type="radio" name="topic" value="Музыка"> Музыка</label>
+                        </div>
+                        <div class="custom-topic">
+                            <input type="text" id="customTopicInput" placeholder="Своя тема">
+                        </div>
+                    </div>
+
+                    <input type="text" id="messageInput" placeholder="Написать сообщение (по желанию)...">
+                    <button class="send-btn" onclick="sendFile()">Отправить</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 2: ВХОДЯЩИЕ -->
+        <div id="tab-inbox" class="tab-content">
+            <div class="tab-header">
+                <h2>Входящие файлы</h2>
+                <button class="clear-btn" onclick="clearInbox()">Очистить всё</button>
+            </div>
+            <div id="inboxList">
+                <p>У вас пока нет входящих файлов.</p>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 3: МОЙ ДИСК -->
+        <div id="tab-mydisk" class="tab-content">
+            <h2>Мой диск (Файлы для себя)</h2>
+            <div id="myDiskList">
+                <p>На вашем диске пока нет файлов.</p>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА 4: ИСТОРИЯ -->
+        <div id="tab-sent" class="tab-content">
+            <div class="tab-header">
+                <h2>История отправок</h2>
+                <button class="clear-btn" onclick="clearHistory()">Очистить всё</button>
+            </div>
+            <ul id="historyList" class="file-list">
+                <li>Пока нет отправленных файлов.</li>
+            </ul>
+        </div>
+
+        <!-- ВКЛАДКА 5: АККАУНТ -->
+        <div id="tab-account" class="tab-content">
+            <h2>Мой аккаунт</h2>
+            
+            <div id="authForms">
+                <div class="auth-box">
+                    <h3>Регистрация</h3>
+                    <input type="text" id="regName" placeholder="Имя">
+                    <input type="text" id="regSurname" placeholder="Фамилия">
+                    <input type="text" id="regPatronymic" placeholder="Отчество (по желанию)">
+                    <input type="text" id="regNickname" placeholder="Уникальный никнейм (на англ.)">
+                    <input type="password" id="regPassword" placeholder="Пароль">
+                    <input type="number" id="regAge" placeholder="Возраст">
+                    <input type="email" id="regEmail" placeholder="Почта (по желанию)">
+                    <button onclick="registerUser()">Зарегистрироваться</button>
+                </div>
+                <div class="auth-box">
+                    <h3>Вход</h3>
+                    <input type="text" id="loginNickname" placeholder="Ваш никнейм (на англ.)">
+                    <input type="password" id="loginPassword" placeholder="Пароль">
+                    <button onclick="loginUser()">Войти</button>
+                </div>
+            </div>
+
+            <div id="profileBox" style="display: none;">
+                <div class="profile-header">
+                    <div class="avatar" id="profileAvatar"></div>
+                    <div class="profile-info">
+                        <h3 id="profileName">Имя</h3>
+                        <p id="profileNickname">@никнейм</p>
+                        <p id="profileAge">Возраст: 0</p>
+                    </div>
+                </div>
+                
+                <div class="profile-actions">
+                    <button onclick="toggleSettings()" style="background-color: #34495e;">Настройки</button>
+                    <button onclick="logoutConfirm()" style="background-color: #c0392b;">Выйти</button>
+                </div>
+
+                <div id="settingsBox" style="display: none;">
+                    <h3>Настройки профиля</h3>
+                    
+                    <div class="avatar-upload">
+                        <label>Своя аватарка (файл):</label>
+                        <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar(event)">
+                    </div>
+
+                    <div class="avatar-presets">
+                        <label>Или выберите готовую:</label>
+                        <div class="preset-grid">
+                            <div class="preset" onclick="setPresetAvatar('😎')">😎</div>
+                            <div class="preset" onclick="setPresetAvatar('🔥')">🔥</div>
+                            <div class="preset" onclick="setPresetAvatar('🦁')">🦁</div>
+                            <div class="preset" onclick="setPresetAvatar('🚀')">🚀</div>
+                            <div class="preset" onclick="setPresetAvatar('👾')">👾</div>
+                            <div class="preset" onclick="setPresetAvatar('🐺')">🐺</div>
+                        </div>
+                    </div>
+                    
+                    <input type="text" id="editName" placeholder="Новое имя">
+                    <input type="text" id="editSurname" placeholder="Новая фамилия">
+                    <input type="number" id="editAge" placeholder="Новый возраст">
+                    
+                    <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px dashed #ccc;">
+                        <p style="margin: 0; font-size: 14px;">Смена никнейма (осталось попыток: <strong id="nickChangeLeft">2</strong>):</p>
+                        <input type="text" id="editNickname" placeholder="Новый никнейм (на англ.)" style="margin-top: 5px;">
+                    </div>
+                    <button onclick="saveSettings()" style="background-color: #27ae60; margin-top: 15px;">Сохранить изменения</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
