@@ -1,5 +1,5 @@
 // --- ПОДКЛЮЧЕНИЕ SUPABASE ---
-const SUPABASE_URL = 'https://ilqlrjfqlzorfyectay.supabase.co';
+const SUPABASE_URL = 'https://llqlrjfqlzorfyecrtay.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_yqhRKQRL_nk41fCRrFpFhA_jQIEthvh'; // Вставь сюда полный ключ, если он обрезан
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
