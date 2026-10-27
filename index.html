@@ -59,6 +59,12 @@
                     </div>
 
                     <input type="text" id="messageInput" placeholder="Написать сообщение (по желанию)...">
+                    
+                    <!-- ПРЕДУПРЕЖДЕНИЕ О ЛИМИТЕ -->
+                    <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 14px;">
+                        ⚠️ Максимальный размер файла: 50 МБ (ограничение сервера)
+                    </div>
+
                     <button class="send-btn" onclick="sendFile()">Отправить</button>
                 </div>
             </div>
@@ -95,6 +101,7 @@
         <!-- ВКЛАДКА 5: АККАУНТ -->
         <div id="tab-account" class="tab-content">
             <h2>Мой аккаунт</h2>
+            
             <div id="authForms">
                 <div class="auth-box">
                     <h3>Регистрация</h3>
@@ -140,6 +147,16 @@
                         <input type="text" id="editName" placeholder="Новое имя">
                         <input type="text" id="editSurname" placeholder="Новая фамилия">
                         <input type="number" id="editAge" placeholder="Новый возраст">
+                        <input type="text" id="editBio" placeholder="Немного о себе (описание)">
+                        
+                        <!-- ВЫБОР СТАТУСА -->
+                        <select id="editStatus" style="width: 100%; padding: 10px; margin-bottom: 10px; font-family: 'Times New Roman', Times, serif; font-size: 16px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color);">
+                            <option value="online">🟢 Онлайн</option>
+                            <option value="busy">🔴 Занят</option>
+                            <option value="dnd">🟡 Не беспокоить</option>
+                            <option value="invisible">⚫ Невидимка</option>
+                        </select>
+
                         <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px dashed #ccc;">
                             <p style="margin: 0; font-size: 14px;">Смена никнейма (осталось попыток: <strong id="nickChangeLeft">2</strong>):</p>
                             <input type="text" id="editNickname" placeholder="Новый никнейм (на англ.)" style="margin-top: 5px;">
@@ -150,6 +167,23 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Всплывающее окно профиля (МОДАЛКА) -->
+    <div id="profileModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
+        <div style="background: var(--container-bg); padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; position: relative;">
+            <button onclick="closeProfile()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color); width: auto; padding: 0;">&times;</button>
+            <div class="avatar" id="modalAvatar" style="margin: 0 auto 15px auto;"></div>
+            <h2 id="modalName" style="margin: 0 0 5px 0; border: none;">Имя</h2>
+            <p id="modalNickname" style="margin: 0; color: #7f8c8d; font-size: 18px;">@ник</p>
+            
+            <!-- СТАТУС В ПРОФИЛЕ -->
+            <p id="modalStatus" style="margin: 5px 0; font-weight: bold; font-size: 14px;"></p>
+
+            <p id="modalAge" style="margin: 5px 0;">Возраст: 0</p>
+            <p id="modalDate" style="margin: 5px 0; font-size: 14px; color: #95a5a6;">Дата регистрации: ...</p>
+            <p id="modalBio" style="margin-top: 15px; font-style: italic;">Описание профиля</p>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
