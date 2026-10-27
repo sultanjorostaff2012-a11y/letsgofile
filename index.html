@@ -41,7 +41,7 @@
                 </div>
                 <div class="recipient-section">
                     <h3>Кому отправить?</h3>
-                    <input type="text" id="recipientInput" placeholder="Введите никнейм (или свой ник для сохранения на диск)">
+                    <input type="text" id="recipientInput" placeholder="Введите никнейм получателя">
                     <div id="recipientStatus" class="recipient-status"></div>
                     
                     <div class="topic-section">
@@ -68,7 +68,6 @@
         <div id="tab-inbox" class="tab-content">
             <div class="tab-header">
                 <h2>Входящие файлы</h2>
-                <button class="clear-btn" onclick="clearInbox()">Очистить всё</button>
             </div>
             <div id="inboxList">
                 <p>У вас пока нет входящих файлов.</p>
@@ -87,7 +86,6 @@
         <div id="tab-sent" class="tab-content">
             <div class="tab-header">
                 <h2>История отправок</h2>
-                <button class="clear-btn" onclick="clearHistory()">Очистить всё</button>
             </div>
             <ul id="historyList" class="file-list">
                 <li>Пока нет отправленных файлов.</li>
@@ -97,7 +95,6 @@
         <!-- ВКЛАДКА 5: АККАУНТ -->
         <div id="tab-account" class="tab-content">
             <h2>Мой аккаунт</h2>
-            
             <div id="authForms">
                 <div class="auth-box">
                     <h3>Регистрация</h3>
@@ -107,12 +104,12 @@
                     <input type="text" id="regNickname" placeholder="Уникальный никнейм (на англ.)">
                     <input type="password" id="regPassword" placeholder="Пароль">
                     <input type="number" id="regAge" placeholder="Возраст">
-                    <input type="email" id="regEmail" placeholder="Почта (по желанию)">
+                    <input type="email" id="regEmail" placeholder="Почта (обязательно)">
                     <button onclick="registerUser()">Зарегистрироваться</button>
                 </div>
                 <div class="auth-box">
                     <h3>Вход</h3>
-                    <input type="text" id="loginNickname" placeholder="Ваш никнейм (на англ.)">
+                    <input type="email" id="loginEmail" placeholder="Ваша почта">
                     <input type="password" id="loginPassword" placeholder="Пароль">
                     <button onclick="loginUser()">Войти</button>
                 </div>
@@ -129,45 +126,15 @@
                 </div>
                 
                 <div class="profile-actions">
-                    <button onclick="toggleSettings()" style="background-color: #34495e;">Настройки</button>
                     <button onclick="logoutConfirm()" style="background-color: #c0392b;">Выйти</button>
-                </div>
-
-                <div id="settingsBox" style="display: none;">
-                    <h3>Настройки профиля</h3>
-                    
-                    <div class="avatar-upload">
-                        <label>Своя аватарка (файл):</label>
-                        <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar(event)">
-                    </div>
-
-                    <div class="avatar-presets">
-                        <label>Или выберите готовую:</label>
-                        <div class="preset-grid">
-                            <div class="preset" onclick="setPresetAvatar('😎')">😎</div>
-                            <div class="preset" onclick="setPresetAvatar('🔥')">🔥</div>
-                            <div class="preset" onclick="setPresetAvatar('🦁')">🦁</div>
-                            <div class="preset" onclick="setPresetAvatar('🚀')">🚀</div>
-                            <div class="preset" onclick="setPresetAvatar('👾')">👾</div>
-                            <div class="preset" onclick="setPresetAvatar('🐺')">🐺</div>
-                        </div>
-                    </div>
-                    
-                    <input type="text" id="editName" placeholder="Новое имя">
-                    <input type="text" id="editSurname" placeholder="Новая фамилия">
-                    <input type="number" id="editAge" placeholder="Новый возраст">
-                    
-                    <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px dashed #ccc;">
-                        <p style="margin: 0; font-size: 14px;">Смена никнейма (осталось попыток: <strong id="nickChangeLeft">2</strong>):</p>
-                        <input type="text" id="editNickname" placeholder="Новый никнейм (на англ.)" style="margin-top: 5px;">
-                    </div>
-                    <button onclick="saveSettings()" style="background-color: #27ae60; margin-top: 15px;">Сохранить изменения</button>
                 </div>
             </div>
         </div>
 
     </div>
 
+    <!-- Подключаем Supabase (ТОЛЬКО ОДИН РАЗ) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
 </body>
 </html>
