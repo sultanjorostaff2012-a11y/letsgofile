@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Let'sGoFile</title>
-    <!-- Иконка сайта (Favicon) -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><text x='50' y='70' font-size='60' font-family='Times New Roman' font-weight='bold' fill='white' text-anchor='middle'>F</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230078d4'/><text x='50' y='70' font-size='60' font-family='Segoe UI' font-weight='bold' fill='white' text-anchor='middle'>F</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -24,14 +23,16 @@
         <a onclick="showTab('send')">Отправить</a>
         <a onclick="showTab('inbox')">Входящие <span id="inboxBadge" style="background:#e74c3c; color:white; border-radius:50%; padding:2px 6px; font-size:12px; display:none;">0</span></a>
         <a onclick="showTab('mydisk')">Мой диск</a>
-        <a onclick="showTab('sent')">История</a>
+        <a onclick="showTab('sent')">Отправленные</a>
+        <a onclick="showTab('friends')">Друзья</a>
+        <a onclick="showTab('stories')">Истории</a>
         <a onclick="showTab('updates')">Обновления</a>
         <a onclick="showTab('account')">Аккаунт</a>
     </nav>
 
     <div class="container">
         
-        <!-- ВКЛАДКА 1: ОТПРАВКА -->
+        <!-- ВКЛАДКА: ОТПРАВКА -->
         <div id="tab-send" class="tab-content active">
             <h2>Отправить файл</h2>
             <div class="send-layout">
@@ -45,8 +46,6 @@
                 <div class="recipient-section">
                     <h3>Кому отправить?</h3>
                     <input type="text" id="recipientInput" placeholder="Введите никнейм получателя">
-                    <div id="recipientStatus" class="recipient-status"></div>
-                    
                     <div class="topic-section">
                         <h4>Тема файла:</h4>
                         <div class="topics-list">
@@ -54,168 +53,233 @@
                             <label><input type="radio" name="topic" value="Фото"> Фото</label>
                             <label><input type="radio" name="topic" value="Документы"> Документы</label>
                             <label><input type="radio" name="topic" value="Видео"> Видео</label>
-                            <label><input type="radio" name="topic" value="Музыка"> Музыка</label>
                         </div>
-                        <div class="custom-topic">
-                            <input type="text" id="customTopicInput" placeholder="Своя тема">
-                        </div>
+                        <input type="text" id="customTopicInput" placeholder="Своя тема">
                     </div>
-
-                    <input type="text" id="messageInput" placeholder="Написать сообщение (по желанию)...">
-                    
-                    <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 10px; font-size: 14px;">
-                        ⚠️ Максимальный размер файла: 50 МБ (ограничение сервера)
-                    </div>
-
+                    <input type="text" id="messageInput" placeholder="Написать сообщение...">
                     <button class="send-btn" onclick="sendFile()">Отправить</button>
                 </div>
             </div>
         </div>
 
-        <!-- ВКЛАДКА 2: ВХОДЯЩИЕ -->
+        <!-- ВКЛАДКА: ВХОДЯЩИЕ -->
         <div id="tab-inbox" class="tab-content">
-            <div class="tab-header">
-                <h2>Входящие файлы</h2>
-            </div>
-            <div id="inboxList">
-                <p>У вас пока нет входящих файлов.</p>
-            </div>
+            <h2>Входящие файлы</h2>
+            <div id="inboxList"><p>У вас пока нет входящих файлов.</p></div>
         </div>
 
-        <!-- ВКЛАДКА 3: МОЙ ДИСК -->
-         <div id="tab-mydisk" class="tab-content">
-            <h2>Мой диск (Файлы для себя)</h2>
-            <div id="myDiskList">
-                <p>На вашем диске пока нет файлов.</p>
-            </div>
+        <!-- ВКЛАДКА: МОЙ ДИСК -->
+        <div id="tab-mydisk" class="tab-content">
+            <h2>Мой диск</h2>
+            <div id="myDiskList"><p>На вашем диске пока нет файлов.</p></div>
         </div>
 
-        <!-- ВКЛАДКА 4: ИСТОРИЯ -->
+        <!-- ВКЛАДКА: ОТПРАВЛЕННЫЕ -->
         <div id="tab-sent" class="tab-content">
-            <div class="tab-header">
-                <h2>История отправок</h2>
-            </div>
-            <ul id="historyList" class="file-list">
-                <li>Пока нет отправленных файлов.</li>
-            </ul>
+            <h2>История отправок</h2>
+            <ul id="historyList" class="file-list"><li>Пока нет отправленных файлов.</li></ul>
         </div>
 
-        <!-- ВКЛАДКА 5: ОБНОВЛЕНИЯ -->
+        <!-- ВКЛАДКА: ДРУЗЬЯ -->
+        <div id="tab-friends" class="tab-content">
+            <h2>Мои друзья</h2>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="friendSearchInput" placeholder="Введите никнейм друга..." style="margin-bottom: 0;">
+                <button onclick="searchFriend()" style="width: auto; padding: 0 20px;">Найти</button>
+            </div>
+            <div id="friendSearchResult"></div>
+            <h3>Список друзей:</h3>
+            <div id="friendsList"><p>У вас пока нет друзей.</p></div>
+        </div>
+
+        <!-- ВКЛАДКА: ИСТОРИИ -->
+        <div id="tab-stories" class="tab-content">
+            <h2>Истории</h2>
+            <div style="margin-bottom: 30px; padding: 15px; background: rgba(128,128,128,0.1); border-radius: 8px;">
+                <h4 style="margin-top: 0;">Добавить свою историю</h4>
+                <input type="file" id="storyInput" accept="image/*" style="display: none;">
+                <button onclick="document.getElementById('storyInput').click()" style="background-color: var(--primary-color);">Загрузить фото</button>
+            </div>
+            <h4>Истории друзей:</h4>
+            <div id="storiesFeed" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+                <p>Пока нет историй.</p>
+            </div>
+        </div>
+
+        <!-- ВКЛАДКА: ОБНОВЛЕНИЯ -->
         <div id="tab-updates" class="tab-content">
             <h2>История обновлений</h2>
-            
             <div class="update-card">
-                <div class="update-version">Версия 1.0.2 <span class="update-date">(Сегодня)</span></div>
+                <div class="update-version">Версия 2.8.0</div>
                 <ul class="update-list">
-                    <li>Добавлена вкладка с историей обновлений.</li>
-                    <li>Улучшен дизайн кнопок и полей ввода.</li>
-                    <li>Добавлена проверка размера файла (до 50 МБ).</li>
-                </ul>
-            </div>
-
-            <div class="update-card">
-                <div class="update-version">Версия 1.0.1 <span class="update-date">(Ранее)</span></div>
-                <ul class="update-list">
-                    <li>Добавлены статусы пользователей (Онлайн, Занят, Не беспокоить).</li>
-                    <li>Теперь можно смотреть профили других пользователей.</li>
-                    <li>Добавлена возможность менять аватарку.</li>
-                </ul>
-            </div>
-
-            <div class="update-card">
-                <div class="update-version">Версия 1.0.0 <span class="update-date">(Запуск)</span></div>
-                <ul class="update-list">
-                    <li>Официальный запуск Let'sGoFile!</li>
-                    <li>Регистрация и вход через Supabase.</li>
-                    <li>Отправка и скачивание файлов.</li>
-                    <li>Вкладки «Входящие», «Мой диск» и «История».</li>
+                    <li>Добавлены неоновые рамки (4 цвета).</li>
+                    <li>Добавлена возможность убрать бейджики.</li>
+                    <li>Новые профили теперь имеют классический стиль по умолчанию.</li>
                 </ul>
             </div>
         </div>
 
-        <!-- ВКЛАДКА 6: АККАУНТ -->
+        <!-- ВКЛАДКА: АККАУНТ -->
         <div id="tab-account" class="tab-content">
             <h2>Мой аккаунт</h2>
-            
             <div id="authForms">
                 <div class="auth-box">
                     <h3>Регистрация</h3>
                     <input type="text" id="regName" placeholder="Имя">
                     <input type="text" id="regSurname" placeholder="Фамилия">
-                    <input type="text" id="regPatronymic" placeholder="Отчество (по желанию)">
-                    <input type="text" id="regNickname" placeholder="Уникальный никнейм (на англ.)">
+                    <input type="text" id="regNickname" placeholder="Никнейм (на англ.)">
                     <input type="password" id="regPassword" placeholder="Пароль">
                     <input type="number" id="regAge" placeholder="Возраст">
-                    <input type="email" id="regEmail" placeholder="Почта (обязательно)">
+                    <input type="email" id="regEmail" placeholder="Почта">
                     <button onclick="registerUser()">Зарегистрироваться</button>
                 </div>
                 <div class="auth-box">
                     <h3>Вход</h3>
-                    <input type="email" id="loginEmail" placeholder="Ваша почта">
+                    <input type="email" id="loginEmail" placeholder="Почта">
                     <input type="password" id="loginPassword" placeholder="Пароль">
                     <button onclick="loginUser()">Войти</button>
                 </div>
             </div>
 
             <div id="profileBox" style="display: none;">
-                <div class="profile-header">
-                    <div class="avatar" id="profileAvatar"></div>
+                <!-- ДИЗАЙН ПРОФИЛЯ -->
+                <div class="profile-header" id="myProfileHeader" style="border-radius: 12px; border: 1px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.8); padding: 20px; display: flex; align-items: center; gap: 20px;">
+                    <div class="avatar-wrapper">
+                        <div class="avatar-wings" id="myProfileWings" style="display: none;">🦇</div>
+                        <div class="avatar" id="profileAvatar"></div>
+                        <div class="online-status" id="profileStatusDot" style="display: none;"></div>
+                    </div>
+                    
                     <div class="profile-info">
-                        <h3 id="profileName">Имя</h3>
-                        <p id="profileNickname">@никнейм</p>
-                        <p id="profileAge">Возраст: 0</p>
+                        <h3 id="profileName" style="font-size: 24px; margin: 0;">Имя</h3>
+                        <p id="profileNickname" style="font-size: 16px; color: #ddd; margin: 5px 0;">@никнейм</p>
+                        
+                        <!-- БЕЙДЖИКИ -->
+                        <div class="profile-badges" id="myProfileBadges">
+                            <span>💻</span>
+                            <span>🎮</span>
+                            <span>⚔️</span>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- КНОПКИ УПРАВЛЕНИЯ ПРОФИЛЕМ -->
-                <div class="profile-actions">
-                    <button onclick="toggleSettings()" style="background-color: #34495e;">Настройки</button>
+                <div class="profile-actions" style="margin-top: 20px;">
+                    <button onclick="toggleSettings()" style="background-color: #5865F2;">Редактировать профиль</button>
                     <button onclick="logoutConfirm()" style="background-color: #c0392b;">Выйти</button>
                 </div>
 
-                <div id="settingsBox" style="display: none;">
+                <!-- НАСТРОЙКИ ПРОФИЛЯ -->
+                <div id="settingsBox" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px;">
                     <h3>Настройки профиля</h3>
-                    <div class="avatar-upload">
-                        <label>Своя аватарка (файл):</label>
+                    
+                    <div class="avatar-upload" style="margin: 15px 0;">
+                        <label>Своя аватарка:</label>
                         <input type="file" id="avatarInput" accept="image/*" onchange="uploadAvatar(event)">
                     </div>
-                    <div style="margin-top: 15px;">
-                        <input type="text" id="editName" placeholder="Новое имя">
-                        <input type="text" id="editSurname" placeholder="Новая фамилия">
-                        <input type="number" id="editAge" placeholder="Новый возраст">
-                        <input type="text" id="editBio" placeholder="Немного о себе (описание)">
-                        
-                        <select id="editStatus" style="width: 100%; padding: 10px; margin-bottom: 10px; font-family: 'Times New Roman', Times, serif; font-size: 16px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); border-radius: 8px;">
-                            <option value="online">🟢 Онлайн</option>
-                            <option value="busy">🔴 Занят</option>
-                            <option value="dnd">🟡 Не беспокоить</option>
-                            <option value="invisible">⚫ Невидимка</option>
-                        </select>
 
-                        <div style="margin-top: 10px; padding: 10px; background: #f9f9f9; border: 1px dashed #ccc; border-radius: 8px;">
-                            <p style="margin: 0; font-size: 14px;">Смена никнейма (осталось попыток: <strong id="nickChangeLeft">2</strong>):</p>
-                            <input type="text" id="editNickname" placeholder="Новый никнейм (на англ.)" style="margin-top: 5px;">
-                        </div>
+                    <h4 style="margin-bottom: 5px;">Личные данные</h4>
+                    <input type="text" id="editName" placeholder="Имя">
+                    <input type="text" id="editSurname" placeholder="Фамилия">
+                    <input type="text" id="editPatronymic" placeholder="Отчество (если есть)">
+                    <input type="text" id="editBio" placeholder="О себе">
+
+                    <div style="margin: 15px 0; padding: 10px; border: 1px dashed var(--glass-border); border-radius: 8px;">
+                        <p style="margin: 0 0 5px 0; font-size: 14px;">Смена никнейма (осталось: <strong id="nickChangeLeft">2</strong>):</p>
+                        <input type="text" id="editNickname" placeholder="Новый никнейм (на англ.)" style="margin-bottom: 0;">
                     </div>
-                    <button onclick="saveSettings()" style="background-color: #27ae60; margin-top: 15px;">Сохранить изменения</button>
+
+                    <h4 style="margin-bottom: 5px;">Стиль профиля (Фон)</h4>
+                    <label style="font-size: 14px; display: block; margin-bottom: 5px;">Цвет 1:</label>
+                    <input type="color" id="editColor1" style="width: 100%; height: 40px; padding: 2px; cursor: pointer; margin-bottom: 10px;">
+                    
+                    <label style="font-size: 14px; display: block; margin-bottom: 5px;">Цвет 2:</label>
+                    <input type="color" id="editColor2" style="width: 100%; height: 40px; padding: 2px; cursor: pointer; margin-bottom: 10px;">
+                    
+                    <label style="font-size: 14px; display: block; margin-bottom: 5px;">Цвет 3:</label>
+                    <input type="color" id="editColor3" style="width: 100%; height: 40px; padding: 2px; cursor: pointer; margin-bottom: 10px;">
+
+                    <label style="font-size: 14px; display: block; margin-bottom: 5px;">Цвет шрифта профиля:</label>
+                    <select id="editTextColor" style="margin-bottom: 15px;">
+                        <option value="white">Белый</option>
+                        <option value="black">Черный</option>
+                    </select>
+
+                    <h4 style="margin-bottom: 5px;">Стиль имени</h4>
+                    <label style="font-size: 14px; display: block; margin-bottom: 5px;">Шрифт:</label>
+                    <select id="editNameFont" style="margin-bottom: 10px;">
+                        <option value="inherit">Обычный</option>
+                        <option value="'Courier New', monospace">Моно</option>
+                        <option value="'Comic Sans MS', cursive">Веселый</option>
+                        <option value="Impact, sans-serif">Жирный</option>
+                        <option value="Georgia, serif">Классический</option>
+                    </select>
+
+                    <label style="font-size: 14px; display: block; margin-bottom: 5px;">Цвет имени:</label>
+                    <input type="color" id="editNameColor" style="width: 100%; height: 40px; padding: 2px; cursor: pointer; margin-bottom: 15px;">
+
+                    <h4 style="margin-bottom: 5px;">Рамка и Крылья</h4>
+                    <select id="editAvatarFrame" style="margin-bottom: 15px;">
+                        <option value="none">Без рамки</option>
+                        <option value="angel">Ангельские крылья 🕊️</option>
+                        <option value="gold">Золотая рамка 🏆</option>
+                        <option value="neon-pink">Неон Розовый 🌸</option>
+                        <option value="neon-blue">Неон Синий 💧</option>
+                        <option value="neon-green">Неон Зеленый 🟢</option>
+                        <option value="neon-red">Неон Красный 🔴</option>
+                    </select>
+
+                    <h4 style="margin-bottom: 5px;">Бейджики (Достижения)</h4>
+                    <select id="editBadges" style="margin-bottom: 15px;">
+                        <option value="none">Убрать бейджики</option>
+                        <option value="💻,🎮,⚔️">Геймер (💻🎮⚔️)</option>
+                        <option value="🚀,🔥,👑">Король (🚀🔥👑)</option>
+                        <option value="🎵,🎧,🎤">Меломан (🎵🎧🎤)</option>
+                        <option value="⚽,🏀,🏆">Спортсмен (⚽🏀🏆)</option>
+                        <option value="🌟,💎,✨">Элита (🌟💎✨)</option>
+                    </select>
+
+                    <button onclick="saveSettings()" style="background-color: #27ae60; margin-bottom: 10px;">Сохранить все изменения</button>
+                    
+                    <button onclick="changePassword()" style="background-color: #f39c12;">Сменить пароль</button>
+                    <input type="password" id="newPassword" placeholder="Новый пароль (мин. 6 символов)" style="margin-top: 10px;">
                 </div>
             </div>
         </div>
 
     </div>
 
-    <!-- Всплывающее окно профиля (МОДАЛКА) -->
+    <!-- Модальное окно профиля (Чужой профиль) -->
     <div id="profileModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
-        <div style="background: var(--container-bg); padding: 30px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; position: relative;">
-            <button onclick="closeProfile()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-color); width: auto; padding: 0;">&times;</button>
-            <div class="avatar" id="modalAvatar" style="margin: 0 auto 15px auto;"></div>
-            <h2 id="modalName" style="margin: 0 0 5px 0; border: none;">Имя</h2>
-            <p id="modalNickname" style="margin: 0; color: #7f8c8d; font-size: 18px;">@ник</p>
-            <p id="modalStatus" style="margin: 5px 0; font-weight: bold; font-size: 14px;"></p>
-            <p id="modalAge" style="margin: 5px 0;">Возраст: 0</p>
-            <p id="modalDate" style="margin: 5px 0; font-size: 14px; color: #95a5a6;">Дата регистрации: ...</p>
-            <p id="modalBio" style="margin-top: 15px; font-style: italic;">Описание профиля</p>
+        <div id="modalContent" style="padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; position: relative; border: 1px solid #333; box-shadow: 0 0 30px rgba(0,0,0,0.9);">
+            <button onclick="closeProfile()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: inherit; width: auto; padding: 0;">&times;</button>
+            
+            <div class="avatar-wrapper" style="margin: 0 auto;">
+                <div class="avatar-wings" id="modalWings" style="display: none;">🦇</div>
+                <div class="avatar" id="modalAvatar"></div>
+                <div class="online-status" id="modalStatusDot" style="display: none;"></div>
+            </div>
+
+            <h2 id="modalName" style="margin: 15px 0 5px 0; border: none; font-size: 22px;">Имя</h2>
+            <p id="modalNickname" style="margin: 0; font-size: 16px; color: #ddd;">@ник</p>
+            
+            <!-- БЕЙДЖИКИ ЧУЖОГО ПРОФИЛЯ -->
+            <div class="profile-badges" id="modalBadges" style="justify-content: center; margin-bottom: 10px; color: white;">
+                <span>💻</span>
+                <span>🎮</span>
+            </div>
+
+            <p id="modalBio" style="margin-top: 15px; font-style: italic; opacity: 0.8; font-size: 14px;">Описание профиля</p>
         </div>
+    </div>
+
+    <!-- Модальное окно просмотра истории -->
+    <div id="storyViewer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column;">
+        <button onclick="closeStory()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 40px; cursor: pointer; z-index: 3001;">&times;</button>
+        <div style="position: absolute; top: 20px; left: 20px; color: white; font-weight: bold; z-index: 3001;" id="storyAuthor"></div>
+        <div style="position: absolute; top: 10px; left: 10px; right: 10px; height: 4px; background: rgba(255,255,255,0.3); z-index: 3001;">
+            <div id="storyProgress" style="height: 100%; background: white; width: 0%; transition: width 5s linear;"></div>
+        </div>
+        <img id="storyImage" src="" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px;">
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
