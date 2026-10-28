@@ -29,7 +29,10 @@ function showTab(tabName) {
     if (tabName === 'inbox') renderInbox();
     if (tabName === 'friends') renderFriends();
     if (tabName === 'stories') renderStories();
-    if (tabName === 'chat') renderChatList();
+    if (tabName === 'chat') {
+        renderChatList();
+        checkChatBadge(); 
+    }
     if (tabName === 'account') checkUser();
 }
 
@@ -171,6 +174,8 @@ async function checkUser() {
         if(document.getElementById('nickChangeLeft')) document.getElementById('nickChangeLeft').innerText = 2 - (profile.nick_changes || 0);
         
         checkInbox();
+        checkChatBadge();
+        
         await supabaseClient.from('profiles').update({ is_online: true }).eq('id', profile.id);
         window.addEventListener('beforeunload', async () => {
             await supabaseClient.from('profiles').update({ is_online: false, last_seen: new Date() }).eq('id', profile.id);
@@ -400,10 +405,34 @@ async function openProfile(nickname) {
 function closeProfile() { document.getElementById('profileModal').style.display = 'none'; }
 
 // --- ЧАТ ---
+async function checkChatBadge() {
+    const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
+    if (!myProfile) return;
+    
+    const { data } = await supabaseClient.from('chats')
+        .select('id')
+        .eq('recipient_id', myProfile.id)
+        .eq('deleted_for_recipient', false);
+        const chatBadge = document.getElementById('chatBadge');
+    const mobileChatBadge = document.getElementById('mobileChatBadge');
+    
+    if (data && data.length > 0) {
+        if (chatBadge) { chatBadge.style.display = 'inline-block'; chatBadge.innerText = data.length; }
+        if (mobileChatBadge) { mobileChatBadge.style.display = 'inline-block'; mobileChatBadge.innerText = data.length; }
+    } else {
+        if (chatBadge) chatBadge.style.display = 'none';
+        if (mobileChatBadge) mobileChatBadge.style.display = 'none';
+    }
+}
+
 async function renderChatList() {
     const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
     const listDiv = document.getElementById('chatFriendsList');
     if (!myProfile) { listDiv.innerHTML = '<p>Войдите в аккаунт.</p>'; return; }
+
+    document.getElementById('chatListContainer').style.display = 'block';
+    document.getElementById('chatWindow').style.display = 'none';
+
     const { data: friendsData } = await supabaseClient.from('friends').select('friend_id').eq('user_id', myProfile.id);
     if (!friendsData || friendsData.length === 0) {
         listDiv.innerHTML = '<p>У вас пока нет друзей. Добавьте их во вкладке "Друзья".</p>';
@@ -436,12 +465,13 @@ async function openChat(friendId, friendName) {
     loadChatMessages();
 
     if (window.chatSubscription) await supabaseClient.removeChannel(window.chatSubscription);
+    
     window.chatSubscription = supabaseClient.channel('chat-room')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, payload => {
             const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
             if ((payload.new.sender_id === currentChatFriendId && payload.new.recipient_id === myProfile.id) ||
                 (payload.new.recipient_id === currentChatFriendId && payload.new.sender_id === myProfile.id)) {
-                loadChatMessages();
+                loadChatMessages(); 
             }
         }).subscribe();
 }
@@ -451,9 +481,12 @@ async function loadChatMessages() {
     const container = document.getElementById('chatMessages');
     if (!myProfile || !currentChatFriendId) return;
 
+    const savedColor = localStorage.getItem('chatBgColor') || 'rgba(0,0,0,0.1)';
+    container.style.background = savedColor;
+
     const { data, error } = await supabaseClient.from('chats')
         .select('*')
-        .or(`and(sender_id.eq.${myProfile.id},recipient_id.eq.${currentChatFriendId}),and(sender_id.eq.${currentChatFriendId},recipient_id.eq.${myProfile.id})`)
+        .or(`and(sender_id.eq.${myProfile.id},recipient_id.eq.${currentChatFriendId},deleted_for_sender.eq.false),and(sender_id.eq.${currentChatFriendId},recipient_id.eq.${myProfile.id},deleted_for_recipient.eq.false)`)
         .order('created_at', { ascending: true });
 
     if (error) { container.innerHTML = '<p>Ошибка загрузки.</p>'; return; }
@@ -461,7 +494,7 @@ async function loadChatMessages() {
     container.innerHTML = data.map(msg => {
         const isMine = msg.sender_id === myProfile.id;
         return `
-            <div style="max-width: 80%; padding: 10px; border-radius: 10px; margin-bottom: 5px; align-self: ${isMine ? 'flex-end' : 'flex-start'}; background: ${isMine ? 'var(--primary-color)' : 'rgba(128,128,128,0.2)'}; color: ${isMine ? 'white' : 'inherit'};">
+            <div style="max-width: 80%; padding: 10px; border-radius: 10px; margin-bottom: 5px; align-self: ${isMine ? 'flex-end' : 'flex-start'}; background: ${isMine ? 'var(--primary-color)' : 'rgba(128,128,128,0.3)'}; color: ${isMine ? 'white' : 'inherit'};">
                 ${msg.message}
             </div>
         `;
@@ -489,6 +522,30 @@ async function sendChatMessage() {
     loadChatMessages();
 }
 
+async function deleteChatForMe() {
+    if (!confirm("Очистить историю чата только для себя?")) return;
+    const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
+    
+    await supabaseClient.from('chats')
+        .update({ deleted_for_sender: true })
+        .eq('sender_id', myProfile.id)
+        .eq('recipient_id', currentChatFriendId);
+        
+    await supabaseClient.from('chats')
+        .update({ deleted_for_recipient: true })
+        .eq('sender_id', currentChatFriendId)
+        .eq('recipient_id', myProfile.id);
+
+    alert("Чат очищен!");
+    loadChatMessages();
+}
+
+function changeChatBg() {
+    const color = document.getElementById('chatBgColor').value;
+    localStorage.setItem('chatBgColor', color);
+    document.getElementById('chatMessages').style.background = color;
+}
+
 function closeChatWindow() {
     currentChatFriendId = null;
     document.getElementById('chatWindow').style.display = 'none';
@@ -497,6 +554,7 @@ function closeChatWindow() {
         supabaseClient.removeChannel(window.chatSubscription);
         window.chatSubscription = null;
     }
+    checkChatBadge(); 
 }
 
 // --- ИСТОРИИ (STORIES) ---
@@ -606,19 +664,15 @@ async function sendStoryReply() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { alert("Войдите в аккаунт!"); return; }
 
-    const { error } = await supabaseClient.from('messages').insert([{
+    const { error } = await supabaseClient.from('chats').insert([{
         sender_id: user.id,
         recipient_id: currentStoryAuthorId,
-        message: replyText,
-        topic: "Ответ на историю",
-        file_name: null,
-        file_url: null,
-        file_size: "0"
+        message: `Ответ на историю: ${replyText}`
     }]);
 
     if (error) { alert("Ошибка отправки: " + error.message); return; }
     
-    alert("Ответ отправлен автору истории!");
+    alert("Ответ отправлен в чат автору истории!");
     document.getElementById('storyReplyInput').value = '';
     closeStory();
 }
