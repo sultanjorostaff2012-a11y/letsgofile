@@ -4,6 +4,8 @@ const SUPABASE_KEY = 'sb_publishable_yqhRKQRL_nk41fCRrFpFhA_jQIEthvh';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let selectedFile = null;
+let currentStoryAuthorId = null;
+let currentChatFriendId = null;
 
 // --- ТЕМНАЯ ТЕМА ---
 function toggleTheme() {
@@ -25,9 +27,9 @@ function showTab(tabName) {
     
     if (tabName === 'sent') renderHistory();
     if (tabName === 'inbox') renderInbox();
-    if (tabName === 'mydisk') renderMyDisk();
     if (tabName === 'friends') renderFriends();
     if (tabName === 'stories') renderStories();
+    if (tabName === 'chat') renderChatList();
     if (tabName === 'account') checkUser();
 }
 
@@ -67,11 +69,10 @@ async function registerUser() {
     const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
     if (authError) { alert("Ошибка регистрации: " + authError.message); return; }
 
-    // По умолчанию ставим обычный серый цвет (без градиента)
     const { error: profileError } = await supabaseClient.from('profiles').insert([{ 
         id: authData.user.id, name, surname, nickname, age, email, avatar: null, nick_changes: 0, status: 'online',
         color1: '#333333', color2: '#444444', color3: '#222222', text_color: 'white', nickname_font: 'inherit', 
-        name_font: 'inherit', name_color: 'inherit', avatar_frame: 'none', badges: 'none' // Бейджики по умолчанию выключены
+        name_font: 'inherit', name_color: 'inherit', avatar_frame: 'none', badges: 'none'
     }]);
 
     if (profileError) { alert("Ошибка профиля: " + profileError.message); return; }
@@ -127,29 +128,25 @@ async function checkUser() {
             }
         }
 
-        // Показываем зеленую точку онлайна
         const statusDot = document.getElementById('profileStatusDot');
         if(statusDot) statusDot.style.display = 'block';
         
-        // Меняем крылья (только если ангельская рамка)
         const wings = document.getElementById('myProfileWings');
         if(wings) {
             if (profile.avatar_frame === 'angel') {
                 wings.style.display = 'flex';
                 wings.innerText = '🕊️';
             } else {
-                wings.style.display = 'none'; // Прячем крылья, если рамка другая
+                wings.style.display = 'none'; 
             }
         }
 
-        // ПРИМЕНЯЕМ ГРАДИЕНТ (или серый по умолчанию)
         const header = document.getElementById('myProfileHeader');
         if(header) {
             header.style.background = `linear-gradient(135deg, ${profile.color1 || '#333'}, ${profile.color2 || '#444'}, ${profile.color3 || '#222'})`;
             header.style.color = profile.text_color === 'black' ? '#1a1a1a' : '#ffffff';
         }
 
-        // БЕЙДЖИКИ
         const badgesContainer = document.getElementById('myProfileBadges');
         if(badgesContainer) {
             if (!profile.badges || profile.badges === 'none') {
@@ -256,7 +253,6 @@ async function saveSettings() {
 
     const { error } = await supabaseClient.from('profiles').update(updateData).eq('id', profile.id);
     if (error) { alert("Ошибка сохранения: " + error.message); return; }
-    
     profile = { ...profile, ...updateData };
     localStorage.setItem('lgs_profile', JSON.stringify(profile));
     alert("Настройки сохранены!");
@@ -302,7 +298,15 @@ async function checkInbox() {
     if (!user) return;
     const { data } = await supabaseClient.from('messages').select('id').eq('recipient_id', user.id);
     const badge = document.getElementById('inboxBadge');
-    if (badge) { data && data.length > 0 ? (badge.style.display = 'inline-block', badge.innerText = data.length) : badge.style.display = 'none'; }
+    const mobileBadge = document.getElementById('mobileInboxBadge');
+    
+    if (data && data.length > 0) {
+        if (badge) { badge.style.display = 'inline-block'; badge.innerText = data.length; }
+        if (mobileBadge) { mobileBadge.style.display = 'inline-block'; mobileBadge.innerText = data.length; }
+    } else {
+        if (badge) badge.style.display = 'none';
+        if (mobileBadge) mobileBadge.style.display = 'none';
+    }
 }
 
 async function renderInbox() {
@@ -317,6 +321,8 @@ async function renderInbox() {
     list.innerHTML = data.map(m => {
         const fontStyle = m.sender.nickname_font ? `font-family: ${m.sender.nickname_font};` : '';
         const frameClass = m.sender.avatar_frame ? `frame-${m.sender.avatar_frame}` : '';
+        const isStoryReply = !m.file_url;
+        
         return `
         <div class="inbox-card-full">
         <div class="inbox-header" style="cursor: pointer;" onclick="openProfile('${m.sender.nickname}')">
@@ -329,11 +335,12 @@ async function renderInbox() {
                 </div>
             </div>
             <div class="inbox-body">
-                <p><strong>Файл:</strong> ${m.file_name} (${m.file_size} МБ)</p>
+                ${isStoryReply ? '' : `<p><strong>Файл:</strong> ${m.file_name} (${m.file_size} МБ)</p>`}
                 <p><strong>Сообщение:</strong> ${m.message || 'Нет'}</p>
+                <p><small style="color: #888;">Тема: ${m.topic}</small></p>
             </div>
             <div class="inbox-actions" style="display:flex; gap:10px; margin-top:10px;">
-                <a href="${m.file_url}" target="_blank" style="background-color: var(--primary-color); color: white; padding: 10px; text-decoration: none; border-radius: 5px; text-align: center; flex: 1;">Скачать</a>
+                ${isStoryReply ? '' : `<a href="${m.file_url}" target="_blank" style="background-color: var(--primary-color); color: white; padding: 10px; text-decoration: none; border-radius: 5px; text-align: center; flex: 1;">Скачать</a>`}
             </div>
         </div>
     `}).join('');
@@ -359,11 +366,9 @@ async function openProfile(nickname) {
     if (data.avatar) { avatarDiv.style.backgroundImage = `url(${data.avatar})`; avatarDiv.innerText = ''; }
     else { avatarDiv.style.backgroundImage = 'none'; avatarDiv.innerText = data.name.charAt(0).toUpperCase(); }
     
-    // Зеленая точка в чужом профиле
     const modalStatusDot = document.getElementById('modalStatusDot');
     if (modalStatusDot) modalStatusDot.style.display = data.is_online ? 'block' : 'none';
 
-    // Крылья (только для ангельской рамки)
     const modalWings = document.getElementById('modalWings');
     if(modalWings) {
         if (data.avatar_frame === 'angel') {
@@ -374,12 +379,10 @@ async function openProfile(nickname) {
         }
     }
 
-    // ПРИМЕНЯЕМ ЦВЕТА
     const modal = document.getElementById('modalContent');
     modal.style.background = `linear-gradient(135deg, ${data.color1 || '#333'}, ${data.color2 || '#444'}, ${data.color3 || '#222'})`;
     modal.style.color = data.text_color === 'black' ? '#1a1a1a' : '#ffffff';
 
-    // БЕЙДЖИКИ ЧУЖОГО ПРОФИЛЯ
     const modalBadges = document.getElementById('modalBadges');
     if(modalBadges) {
         if (!data.badges || data.badges === 'none') {
@@ -396,13 +399,116 @@ async function openProfile(nickname) {
 
 function closeProfile() { document.getElementById('profileModal').style.display = 'none'; }
 
+// --- ЧАТ ---
+async function renderChatList() {
+    const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
+    const listDiv = document.getElementById('chatFriendsList');
+    if (!myProfile) { listDiv.innerHTML = '<p>Войдите в аккаунт.</p>'; return; }
+    const { data: friendsData } = await supabaseClient.from('friends').select('friend_id').eq('user_id', myProfile.id);
+    if (!friendsData || friendsData.length === 0) {
+        listDiv.innerHTML = '<p>У вас пока нет друзей. Добавьте их во вкладке "Друзья".</p>';
+        return;
+    }
+
+    const friendIds = friendsData.map(f => f.friend_id);
+    const { data: profiles } = await supabaseClient.from('profiles').select('id, nickname, name, surname, avatar, is_online').in('id', friendIds);
+
+    listDiv.innerHTML = profiles.map(p => `
+        <div class="inbox-card-full" style="padding: 15px; display:flex; align-items:center; gap: 15px; cursor: pointer;" onclick="openChat('${p.id}', '${p.name} ${p.surname}')">
+            <div class="inbox-avatar-large" style="${p.avatar ? `background-image: url(${p.avatar})` : ''}">
+                ${!p.avatar ? p.name.charAt(0) : ''}
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0;">${p.name} ${p.surname}</h3>
+                <p style="margin: 5px 0 0 0; color: #7f8c8d;">@${p.nickname}</p>
+            </div>
+            <div style="font-size: 20px;">${p.is_online ? '🟢' : '⚫'}</div>
+        </div>
+    `).join('');
+}
+
+async function openChat(friendId, friendName) {
+    currentChatFriendId = friendId;
+    document.getElementById('chatListContainer').style.display = 'none';
+    document.getElementById('chatWindow').style.display = 'block';
+    document.getElementById('chatWithName').innerText = `Чат с ${friendName}`;
+    
+    loadChatMessages();
+
+    if (window.chatSubscription) await supabaseClient.removeChannel(window.chatSubscription);
+    window.chatSubscription = supabaseClient.channel('chat-room')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chats' }, payload => {
+            const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
+            if ((payload.new.sender_id === currentChatFriendId && payload.new.recipient_id === myProfile.id) ||
+                (payload.new.recipient_id === currentChatFriendId && payload.new.sender_id === myProfile.id)) {
+                loadChatMessages();
+            }
+        }).subscribe();
+}
+
+async function loadChatMessages() {
+    const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
+    const container = document.getElementById('chatMessages');
+    if (!myProfile || !currentChatFriendId) return;
+
+    const { data, error } = await supabaseClient.from('chats')
+        .select('*')
+        .or(`and(sender_id.eq.${myProfile.id},recipient_id.eq.${currentChatFriendId}),and(sender_id.eq.${currentChatFriendId},recipient_id.eq.${myProfile.id})`)
+        .order('created_at', { ascending: true });
+
+    if (error) { container.innerHTML = '<p>Ошибка загрузки.</p>'; return; }
+
+    container.innerHTML = data.map(msg => {
+        const isMine = msg.sender_id === myProfile.id;
+        return `
+            <div style="max-width: 80%; padding: 10px; border-radius: 10px; margin-bottom: 5px; align-self: ${isMine ? 'flex-end' : 'flex-start'}; background: ${isMine ? 'var(--primary-color)' : 'rgba(128,128,128,0.2)'}; color: ${isMine ? 'white' : 'inherit'};">
+                ${msg.message}
+            </div>
+        `;
+    }).join('');
+
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendChatMessage() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text || !currentChatFriendId) return;
+
+    const myProfile = JSON.parse(localStorage.getItem('lgs_profile'));
+    
+    const { error } = await supabaseClient.from('chats').insert([{
+        sender_id: myProfile.id,
+        recipient_id: currentChatFriendId,
+        message: text
+    }]);
+
+    if (error) { alert("Ошибка: " + error.message); return; }
+    
+    input.value = '';
+    loadChatMessages();
+}
+
+function closeChatWindow() {
+    currentChatFriendId = null;
+    document.getElementById('chatWindow').style.display = 'none';
+    document.getElementById('chatListContainer').style.display = 'block';
+    if (window.chatSubscription) {
+        supabaseClient.removeChannel(window.chatSubscription);
+        window.chatSubscription = null;
+    }
+}
+
 // --- ИСТОРИИ (STORIES) ---
 document.getElementById('storyInput')?.addEventListener('change', async function(e) {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) { alert("Картинка слишком большая (макс 10 МБ)"); return; }
+
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) { alert("Войдите в аккаунт!"); return; }
+
+    const caption = document.getElementById('storyCaption').value.trim();
 
     const fileExt = file.name.split('.').pop();
     const fileName = `story_${Date.now()}_${user.id}.${fileExt}`;
@@ -413,11 +519,12 @@ document.getElementById('storyInput')?.addEventListener('change', async function
     const { data: urlData } = supabaseClient.storage.from('files').getPublicUrl(fileName);
 
     const { error: dbError } = await supabaseClient.from('stories').insert([{
-        user_id: user.id, image_url: urlData.publicUrl
+        user_id: user.id, image_url: urlData.publicUrl, caption: caption 
     }]);
 
     if (dbError) { alert("Ошибка базы: " + dbError.message); return; }
     alert("История загружена!");
+    document.getElementById('storyCaption').value = ''; 
     renderStories();
 });
 
@@ -476,8 +583,11 @@ async function viewStory(nickname) {
 
     if (storyData && storyData.length > 0) {
         const story = storyData[0];
+        currentStoryAuthorId = userProfile.id; 
+        
         document.getElementById('storyImage').src = story.image_url;
         document.getElementById('storyAuthor').innerText = `@${nickname}`;
+        document.getElementById('storyCaptionView').innerText = story.caption || ''; 
         
         const viewer = document.getElementById('storyViewer');
         viewer.style.display = 'flex';
@@ -485,9 +595,32 @@ async function viewStory(nickname) {
         const progress = document.getElementById('storyProgress');
         progress.style.width = '0%';
         setTimeout(() => { progress.style.width = '100%'; }, 100);
-        
-        setTimeout(() => { closeStory(); }, 5000);
     }
+}
+
+async function sendStoryReply() {
+    const replyText = document.getElementById('storyReplyInput').value.trim();
+    if (!replyText) { alert("Введите текст ответа!"); return; }
+    if (!currentStoryAuthorId) return;
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) { alert("Войдите в аккаунт!"); return; }
+
+    const { error } = await supabaseClient.from('messages').insert([{
+        sender_id: user.id,
+        recipient_id: currentStoryAuthorId,
+        message: replyText,
+        topic: "Ответ на историю",
+        file_name: null,
+        file_url: null,
+        file_size: "0"
+    }]);
+
+    if (error) { alert("Ошибка отправки: " + error.message); return; }
+    
+    alert("Ответ отправлен автору истории!");
+    document.getElementById('storyReplyInput').value = '';
+    closeStory();
 }
 
 function closeStory() {
@@ -495,7 +628,7 @@ function closeStory() {
     document.getElementById('storyProgress').style.width = '0%';
 }
 
-// --- ИСТОРИЯ / ДИСК ---
+// --- ИСТОРИЯ / ДРУЗЬЯ ---
 async function renderHistory() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const list = document.getElementById('historyList');
@@ -504,20 +637,12 @@ async function renderHistory() {
     const { data, error } = await supabaseClient.from('messages').select(`*, recipient:recipient_id (nickname)`).eq('sender_id', user.id).order('created_at', { ascending: false });
     if (error) { list.innerHTML = '<li>Ошибка.</li>'; return; }
     if (data.length === 0) { list.innerHTML = '<li>Пусто.</li>'; return; }
-    list.innerHTML = data.map(m => `<li><strong>${m.file_name}</strong> -> @${m.recipient ? m.recipient.nickname : 'удален'}</li>`).join('');
+    list.innerHTML = data.map(m => {
+        const isStoryReply = !m.file_url;
+        return `<li><strong>${isStoryReply ? 'Ответ на историю' : m.file_name}</strong> -> @${m.recipient ? m.recipient.nickname : 'удален'}</li>`;
+    }).join('');
 }
 
-async function renderMyDisk() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    const list = document.getElementById('myDiskList');
-    if (!list) return;
-    if (!user) { list.innerHTML = '<p>Войдите!</p>'; return; }
-    const { data } = await supabaseClient.from('messages').select('*').eq('sender_id', user.id).eq('recipient_id', user.id).order('created_at', { ascending: false });
-    if (!data || data.length === 0) { list.innerHTML = '<p>Пусто.</p>'; return; }
-    list.innerHTML = data.map(m => `<p><strong>${m.file_name}</strong> <a href="${m.file_url}" target="_blank">Скачать</a></p>`).join('');
-}
-
-// --- ДРУЗЬЯ ---
 async function searchFriend() {
     const input = document.getElementById('friendSearchInput');
     if(!input) return;
@@ -562,7 +687,7 @@ async function renderFriends() {
         return `
         <div class="inbox-card-full" style="padding: 15px; display:flex; align-items:center; gap: 15px; cursor: pointer;" onclick="openProfile('${p.nickname}')">
             <div class="inbox-avatar-large ${frameClass}" style="${p.avatar ? `background-image: url(${p.avatar})` : ''}">
-            ${!p.avatar ? p.name.charAt(0) : ''}
+                ${!p.avatar ? p.name.charAt(0) : ''}
             </div>
             <div style="flex: 1;">
                 <h3 style="margin: 0; font-family: ${p.nickname_font || 'inherit'};">@${p.nickname}</h3>

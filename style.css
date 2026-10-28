@@ -180,9 +180,59 @@ button:hover { background-color: var(--primary-hover); }
 .update-version { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
 .update-list { margin: 0; padding-left: 20px; line-height: 1.6; }
 
+/* Скрываем мобильное меню на компьютере */
+.mobile-nav { display: none; }
+
 @media (max-width: 600px) {
-    .header-content { flex-direction: column; text-align: center; gap: 10px;}
-    nav { gap: 10px; }
-    .container { margin: 15px; padding: 15px; }
-    .profile-header { flex-direction: column; text-align: center; }
+    /* Прячем старое меню на телефоне */
+    .desktop-nav { display: none !important; }
+
+    /* Показываем новое мобильное меню */
+    .mobile-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid var(--glass-border);
+        justify-content: space-around;
+        padding: 10px 0;
+        z-index: 2000;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    }
+
+    .mobile-nav a {
+        font-size: 24px;
+        cursor: pointer;
+        padding: 5px;
+        position: relative;
+        transition: transform 0.2s;
+    }
+    .mobile-nav a:active { transform: scale(0.8); }
+
+    body { padding-bottom: 70px; }
+
+    .header-content { flex-direction: column; text-align: center; gap: 10px; }
+    .container { margin: 10px; padding: 15px; }
+
+    /* ОПТИМИЗАЦИЯ ПРОФИЛЯ */
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px 10px;
+    }
+    .avatar-wrapper { margin: 0 auto 15px auto; }
+    .profile-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    .profile-info h3 { font-size: 20px !important; }
+    .profile-badges { justify-content: center; }
+    .profile-actions { flex-direction: column; gap: 10px; }
+    .profile-actions button { width: 100%; }
+    #modalContent { padding: 20px 10px; }
 }

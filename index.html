@@ -13,20 +13,19 @@
         <div class="header-content">
             <div>
                 <h1>Let'sGoFile</h1>
-                <p>Передача файлов по всему миру</p>
+                <p>Передача файлов и общение</p>
             </div>
             <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">Тёмная тема</button>
         </div>
     </header>
 
-    <nav>
+    <!-- МЕНЮ ДЛЯ КОМПЬЮТЕРА -->
+    <nav class="desktop-nav">
         <a onclick="showTab('send')">Отправить</a>
         <a onclick="showTab('inbox')">Входящие <span id="inboxBadge" style="background:#e74c3c; color:white; border-radius:50%; padding:2px 6px; font-size:12px; display:none;">0</span></a>
-        <a onclick="showTab('mydisk')">Мой диск</a>
-        <a onclick="showTab('sent')">Отправленные</a>
+        <a onclick="showTab('chat')">Чат</a>
         <a onclick="showTab('friends')">Друзья</a>
         <a onclick="showTab('stories')">Истории</a>
-        <a onclick="showTab('updates')">Обновления</a>
         <a onclick="showTab('account')">Аккаунт</a>
     </nav>
 
@@ -68,16 +67,26 @@
             <div id="inboxList"><p>У вас пока нет входящих файлов.</p></div>
         </div>
 
-        <!-- ВКЛАДКА: МОЙ ДИСК -->
-        <div id="tab-mydisk" class="tab-content">
-            <h2>Мой диск</h2>
-            <div id="myDiskList"><p>На вашем диске пока нет файлов.</p></div>
-        </div>
-
-        <!-- ВКЛАДКА: ОТПРАВЛЕННЫЕ -->
-        <div id="tab-sent" class="tab-content">
-            <h2>История отправок</h2>
-            <ul id="historyList" class="file-list"><li>Пока нет отправленных файлов.</li></ul>
+        <!-- ВКЛАДКА: ЧАТ -->
+        <div id="tab-chat" class="tab-content">
+            <h2>Чат</h2>
+            <div id="chatListContainer">
+                <p>Выберите друга из списка, чтобы начать общение.</p>
+                <div id="chatFriendsList"></div>
+            </div>
+            
+            <!-- Окно переписки (скрыто по умолчанию) -->
+            <div id="chatWindow" style="display: none; margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 20px;">
+                <h3 id="chatWithName" style="margin-bottom: 15px;">Чат с ...</h3>
+                <div id="chatMessages" style="height: 300px; overflow-y: auto; background: rgba(0,0,0,0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                    <!-- Сообщения будут здесь -->
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="chatInput" placeholder="Написать сообщение..." style="flex: 1; margin-bottom: 0;" onkeypress="if(event.key === 'Enter') sendChatMessage()">
+                    <button onclick="sendChatMessage()" style="width: auto; padding: 0 20px;">➤</button>
+                </div>
+                <button onclick="closeChatWindow()" style="margin-top: 10px; background-color: #c0392b; width: auto; padding: 8px 15px; font-size: 14px;">Назад к списку</button>
+            </div>
         </div>
 
         <!-- ВКЛАДКА: ДРУЗЬЯ -->
@@ -98,24 +107,12 @@
             <div style="margin-bottom: 30px; padding: 15px; background: rgba(128,128,128,0.1); border-radius: 8px;">
                 <h4 style="margin-top: 0;">Добавить свою историю</h4>
                 <input type="file" id="storyInput" accept="image/*" style="display: none;">
+                <input type="text" id="storyCaption" placeholder="Подпись к истории..." style="margin-bottom: 10px;">
                 <button onclick="document.getElementById('storyInput').click()" style="background-color: var(--primary-color);">Загрузить фото</button>
             </div>
             <h4>Истории друзей:</h4>
             <div id="storiesFeed" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
                 <p>Пока нет историй.</p>
-            </div>
-        </div>
-
-        <!-- ВКЛАДКА: ОБНОВЛЕНИЯ -->
-        <div id="tab-updates" class="tab-content">
-            <h2>История обновлений</h2>
-            <div class="update-card">
-                <div class="update-version">Версия 2.8.0</div>
-                <ul class="update-list">
-                    <li>Добавлены неоновые рамки (4 цвета).</li>
-                    <li>Добавлена возможность убрать бейджики.</li>
-                    <li>Новые профили теперь имеют классический стиль по умолчанию.</li>
-                </ul>
             </div>
         </div>
 
@@ -142,7 +139,6 @@
             </div>
 
             <div id="profileBox" style="display: none;">
-                <!-- ДИЗАЙН ПРОФИЛЯ -->
                 <div class="profile-header" id="myProfileHeader" style="border-radius: 12px; border: 1px solid #333; box-shadow: 0 0 20px rgba(0,0,0,0.8); padding: 20px; display: flex; align-items: center; gap: 20px;">
                     <div class="avatar-wrapper">
                         <div class="avatar-wings" id="myProfileWings" style="display: none;">🦇</div>
@@ -154,7 +150,6 @@
                         <h3 id="profileName" style="font-size: 24px; margin: 0;">Имя</h3>
                         <p id="profileNickname" style="font-size: 16px; color: #ddd; margin: 5px 0;">@никнейм</p>
                         
-                        <!-- БЕЙДЖИКИ -->
                         <div class="profile-badges" id="myProfileBadges">
                             <span>💻</span>
                             <span>🎮</span>
@@ -168,7 +163,6 @@
                     <button onclick="logoutConfirm()" style="background-color: #c0392b;">Выйти</button>
                 </div>
 
-                <!-- НАСТРОЙКИ ПРОФИЛЯ -->
                 <div id="settingsBox" style="display: none; margin-top: 20px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px;">
                     <h3>Настройки профиля</h3>
                     
@@ -248,7 +242,7 @@
 
     </div>
 
-    <!-- Модальное окно профиля (Чужой профиль) -->
+    <!-- Модальное окно профиля -->
     <div id="profileModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center;">
         <div id="modalContent" style="padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; text-align: center; position: relative; border: 1px solid #333; box-shadow: 0 0 30px rgba(0,0,0,0.9);">
             <button onclick="closeProfile()" style="position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 24px; cursor: pointer; color: inherit; width: auto; padding: 0;">&times;</button>
@@ -262,7 +256,6 @@
             <h2 id="modalName" style="margin: 15px 0 5px 0; border: none; font-size: 22px;">Имя</h2>
             <p id="modalNickname" style="margin: 0; font-size: 16px; color: #ddd;">@ник</p>
             
-            <!-- БЕЙДЖИКИ ЧУЖОГО ПРОФИЛЯ -->
             <div class="profile-badges" id="modalBadges" style="justify-content: center; margin-bottom: 10px; color: white;">
                 <span>💻</span>
                 <span>🎮</span>
@@ -271,7 +264,6 @@
             <p id="modalBio" style="margin-top: 15px; font-style: italic; opacity: 0.8; font-size: 14px;">Описание профиля</p>
         </div>
     </div>
-
     <!-- Модальное окно просмотра истории -->
     <div id="storyViewer" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column;">
         <button onclick="closeStory()" style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: white; font-size: 40px; cursor: pointer; z-index: 3001;">&times;</button>
@@ -279,7 +271,25 @@
         <div style="position: absolute; top: 10px; left: 10px; right: 10px; height: 4px; background: rgba(255,255,255,0.3); z-index: 3001;">
             <div id="storyProgress" style="height: 100%; background: white; width: 0%; transition: width 5s linear;"></div>
         </div>
-        <img id="storyImage" src="" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px;">
+        <img id="storyImage" src="" style="max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 10px;">
+        
+        <div style="width: 100%; max-width: 500px; padding: 15px; text-align: center; color: white;">
+            <p id="storyCaptionView" style="font-size: 18px; margin-bottom: 15px;"></p>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="storyReplyInput" placeholder="Ответить на историю..." style="flex: 1; margin-bottom: 0; background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px; border-radius: 6px;">
+                <button onclick="sendStoryReply()" style="width: auto; padding: 0 20px; background: var(--primary-color); border: none; border-radius: 6px; color: white; cursor: pointer;">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МЕНЮ ДЛЯ ТЕЛЕФОНА -->
+    <div class="mobile-nav">
+        <a onclick="showTab('send')">📤</a>
+        <a onclick="showTab('inbox')">📥<span id="mobileInboxBadge" style="background:#e74c3c; color:white; border-radius:50%; padding:2px 5px; font-size:10px; position:absolute; top:5px; right:10px; display:none;">0</span></a>
+        <a onclick="showTab('chat')">💬</a>
+        <a onclick="showTab('friends')">👥</a>
+        <a onclick="showTab('stories')">📸</a>
+        <a onclick="showTab('account')">👤</a>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
